@@ -1,4 +1,4 @@
-name: Download MAUI Cache
+name: Download MAUI Cache (.NET 10 Full Android + Windows)
 
 on:
   workflow_dispatch:
@@ -11,25 +11,53 @@ jobs:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
-    - name: Setup .NET
+    - name: Setup .NET 10 SDK (Preview)
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '10.0.x'
+        dotnet-version: '10.0.100-preview.7'
 
-    - name: Install MAUI Android workload
+    - name: Show installed SDKs
+      run: dotnet --list-sdks
+
+    # خیلی مهم: پاکسازی اولیه برای جلوگیری از conflict
+    - name: Clean workloads (safe reset)
+      run: dotnet workload clean
+
+    # آپدیت manifestها برای نسخه 10
+    - name: Update workload manifests
+      run: dotnet workload update --include-previews
+
+    # نصب MAUI Android
+    - name: Download MAUI Android workload
       run: |
-        dotnet workload install maui-android --download-to-cache cache
+        dotnet workload install maui-android `
+          --download-to-cache cache `
+          --include-previews `
+          --skip-manifest-update
 
-    - name: Install iOS workload (optional)
+    # نصب MAUI Windows (WinUI)
+    - name: Download MAUI Windows workload
       run: |
-        dotnet workload install ios --download-to-cache cache
+        dotnet workload install maui-windows `
+          --download-to-cache cache `
+          --include-previews `
+          --skip-manifest-update
 
+    # (اختیاری ولی توصیه‌شده) نصب کل MAUI برای اطمینان از کامل بودن dependency graph
+    - name: Ensure full MAUI dependencies
+      run: |
+        dotnet workload install maui `
+          --download-to-cache cache `
+          --include-previews `
+          --skip-manifest-update
+
+    # زیپ کردن خروجی
     - name: Zip cache
       run: |
-        powershell Compress-Archive -Path cache -DestinationPath cache.zip
+        powershell Compress-Archive -Path cache -DestinationPath maui-cache-full.zip
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: maui-cache
-        path: cache.zip
+        name: maui-cache-dotnet10-full
+        path: maui-cache-full.zip
