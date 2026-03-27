@@ -11,23 +11,21 @@ jobs:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
-    - name: Setup .NET 10 SDK (Preview)
+    - name: Setup .NET 10 (latest available)
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '10.0.100-preview.7'
+        dotnet-version: '10.0.x'
+        include-prerelease: true
 
     - name: Show installed SDKs
       run: dotnet --list-sdks
 
-    # خیلی مهم: پاکسازی اولیه برای جلوگیری از conflict
-    - name: Clean workloads (safe reset)
+    - name: Clean workloads
       run: dotnet workload clean
 
-    # آپدیت manifestها برای نسخه 10
     - name: Update workload manifests
       run: dotnet workload update --include-previews
 
-    # نصب MAUI Android
     - name: Download MAUI Android workload
       run: |
         dotnet workload install maui-android `
@@ -35,7 +33,6 @@ jobs:
           --include-previews `
           --skip-manifest-update
 
-    # نصب MAUI Windows (WinUI)
     - name: Download MAUI Windows workload
       run: |
         dotnet workload install maui-windows `
@@ -43,7 +40,6 @@ jobs:
           --include-previews `
           --skip-manifest-update
 
-    # (اختیاری ولی توصیه‌شده) نصب کل MAUI برای اطمینان از کامل بودن dependency graph
     - name: Ensure full MAUI dependencies
       run: |
         dotnet workload install maui `
@@ -51,7 +47,6 @@ jobs:
           --include-previews `
           --skip-manifest-update
 
-    # زیپ کردن خروجی
     - name: Zip cache
       run: |
         powershell Compress-Archive -Path cache -DestinationPath maui-cache-full.zip
