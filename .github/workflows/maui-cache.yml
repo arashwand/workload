@@ -16,9 +16,13 @@ jobs:
       with:
         dotnet-version: '10.0.x'
 
-    - name: Install workload to cache
+    - name: Install MAUI Android workload
       run: |
-        dotnet workload install android --version 10.0.20 --download-to-cache cache
+        dotnet workload install maui-android --download-to-cache cache
+
+    - name: Install iOS workload (optional)
+      run: |
+        dotnet workload install ios --download-to-cache cache
 
     - name: Zip cache
       run: |
